@@ -3,20 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Malla Cuántica HCI</title>
+    <title>Alquimia Digital HCI</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="ui">
-        <button id="start-btn">ACTIVAR HOLOGRAMA</button>
-        <p>Prepara tus 10 dedos...</p>
+        <h1>SISTEMA HCI ACTIVADO</h1>
+        <button id="start-btn">INICIAR SECUENCIA</button>
+        <div class="loader"></div>
     </div>
 
-    <video id="input_video" autoplay playsinline muted></video>
+    <video id="input_video" autoplay playsinline muted style="display:none"></video>
     <canvas id="magic-canvas"></canvas>
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-    <script src="main.js"></script>
+    <script type="module" src="main.js"></script>
 </body>
 </html>
+
