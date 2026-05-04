@@ -3,24 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Filtro ASCII Interactivo</title>
+    <title>Malla Cuántica HCI</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Pantalla de inicio -->
     <div id="ui">
-        <button id="start-btn">INICIAR CÁMARA MÁGICA</button>
+        <button id="start-btn">ACTIVAR HOLOGRAMA</button>
+        <p>Prepara tus 10 dedos...</p>
     </div>
 
-    <!-- La cámara y el lienzo donde dibujaremos -->
     <video id="input_video" autoplay playsinline muted></video>
-    <canvas id="ascii-canvas"></canvas>
+    <canvas id="magic-canvas"></canvas>
 
-    <!-- La "Inteligencia Artificial" de Google prestada -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-    
-    <!-- Nuestro cerebro -->
     <script src="main.js"></script>
 </body>
 </html>

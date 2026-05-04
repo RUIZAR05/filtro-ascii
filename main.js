@@ -1,61 +1,90 @@
 const videoElement = document.getElementById('input_video');
-const canvasElement = document.getElementById('ascii-canvas');
+const canvasElement = document.getElementById('magic-canvas');
 const canvasCtx = canvasElement.getContext('2d');
 const startBtn = document.getElementById('start-btn');
 const ui = document.getElementById('ui');
 
-// Las letras y símbolos que usaremos para rellenar
-const asciiChars = "@#S%?*+;:,. ".split("");
+// Los índices de las 5 puntas de los dedos en la IA de MediaPipe
+const fingerTips = [4, 8, 12, 16, 20]; // Pulgar, Índice, Medio, Anular, Meñique
 
-// Esta función se ejecuta cada vez que la cámara ve tus manos
 function onResults(results) {
     canvasElement.width = window.innerWidth;
     canvasElement.height = window.innerHeight;
-    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
-    // Si detecta 2 manos o más...
-    if (results.multiHandLandmarks && results.multiHandLandmarks.length >= 2) {
-        // Buscamos la punta de los dedos índices (el punto número 8)
-        const hand1 = results.multiHandLandmarks[0][8]; 
-        const hand2 = results.multiHandLandmarks[1][8]; 
+    // TRUCO DE INGENIERÍA: En lugar de borrar (clearRect), pintamos de negro al 15%
+    // Esto hace que la luz deje un "rastro" o estela en el aire al mover las manos
+    canvasCtx.fillStyle = "rgba(0, 0, 0, 0.15)";
+    canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
 
-        // Calculamos dónde están en la pantalla
-        const x1 = (1 - hand1.x) * canvasElement.width;
-        const y1 = hand1.y * canvasElement.height;
-        const x2 = (1 - hand2.x) * canvasElement.width;
-        const y2 = hand2.y * canvasElement.height;
+    if (results.multiHandLandmarks && results.multiHandLandmarks.length === 2) {
+        const hand1 = results.multiHandLandmarks[0];
+        const hand2 = results.multiHandLandmarks[1];
 
-        // Dibujamos el rectángulo de Matrix
-        drawAsciiRect(x1, y1, x2, y2);
-    }
-}
+        // Color dinámico que cambia con el tiempo (Arcoíris Neón)
+        const timeColor = `hsl(${Date.now() % 360}, 100%, 50%)`;
 
-// Función para pintar las letras
-function drawAsciiRect(x1, y1, x2, y2) {
-    const left = Math.min(x1, x2);
-    const top = Math.min(y1, y2);
-    const width = Math.abs(x1 - x2);
-    const height = Math.abs(y1 - y2);
+        // 1. Dibujar los láseres que conectan dedo con dedo (Mano 1 con Mano 2)
+        for (let i = 0; i < 5; i++) {
+            const p1 = hand1[fingerTips[i]];
+            const p2 = hand2[fingerTips[i]];
 
-    // Fondo rosa semitransparente
-    canvasCtx.fillStyle = "rgba(255, 0, 255, 0.2)"; 
-    canvasCtx.fillRect(left, top, width, height);
+            const x1 = (1 - p1.x) * canvasElement.width;
+            const y1 = p1.y * canvasElement.height;
+            const x2 = (1 - p2.x) * canvasElement.width;
+            const y2 = p2.y * canvasElement.height;
 
-    // Letras azules brillantes
-    canvasCtx.fillStyle = "#00f2ff"; 
-    const fontSize = 14;
-    canvasCtx.font = fontSize + "px monospace";
+            // Línea brillante
+            canvasCtx.beginPath();
+            canvasCtx.moveTo(x1, y1);
+            canvasCtx.lineTo(x2, y2);
+            canvasCtx.strokeStyle = timeColor;
+            canvasCtx.lineWidth = 3;
+            canvasCtx.stroke();
 
-    // Rellenamos el cuadro de letras al azar
-    for (let y = top; y < top + height; y += fontSize) {
-        for (let x = left; x < left + width; x += fontSize * 0.6) {
-            const randomChar = asciiChars[Math.floor(Math.random() * asciiChars.length)];
-            canvasCtx.fillText(randomChar, x, y);
+            // Dibujar las "esferas de energía" en las puntas de los 10 dedos
+            drawOrb(x1, y1, timeColor);
+            drawOrb(x2, y2, timeColor);
         }
+
+        // 2. Dibujar un polígono que conecta los 5 dedos de CADA mano
+        drawHandPolygon(hand1, canvasElement.width, canvasElement.height, "rgba(0, 242, 255, 0.3)");
+        drawHandPolygon(hand2, canvasElement.width, canvasElement.height, "rgba(255, 0, 255, 0.3)");
     }
 }
 
-// Encendemos la Inteligencia Artificial
+// Función para pintar esferas de luz en las yemas
+function drawOrb(x, y, color) {
+    canvasCtx.beginPath();
+    canvasCtx.arc(x, y, 8, 0, 2 * Math.PI);
+    canvasCtx.fillStyle = "#ffffff"; // Centro blanco caliente
+    canvasCtx.fill();
+    
+    canvasCtx.beginPath();
+    canvasCtx.arc(x, y, 15, 0, 2 * Math.PI);
+    canvasCtx.fillStyle = color; // Borde de color
+    canvasCtx.globalAlpha = 0.5;
+    canvasCtx.fill();
+    canvasCtx.globalAlpha = 1.0;
+}
+
+// Función para conectar los 5 dedos de una misma mano creando una figura geométrica
+function drawHandPolygon(hand, w, h, color) {
+    canvasCtx.beginPath();
+    for (let i = 0; i < 5; i++) {
+        const x = (1 - hand[fingerTips[i]].x) * w;
+        const y = hand[fingerTips[i]].y * h;
+        if (i === 0) canvasCtx.moveTo(x, y);
+        else canvasCtx.lineTo(x, y);
+    }
+    canvasCtx.closePath();
+    canvasCtx.fillStyle = color;
+    canvasCtx.fill();
+    canvasCtx.lineWidth = 1;
+    canvasCtx.strokeStyle = "#ffffff";
+    canvasCtx.stroke();
+}
+
+// Inicializar la Inteligencia artificial
 const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
 hands.setOptions({ maxNumHands: 2, modelComplexity: 0, minDetectionConfidence: 0.5 });
 hands.onResults(onResults);
@@ -65,7 +94,6 @@ const camera = new Camera(videoElement, {
     width: 640, height: 480
 });
 
-// El botón de inicio quita la pantalla negra y prende la cámara
 startBtn.addEventListener('click', () => {
     ui.style.display = 'none';
     camera.start();

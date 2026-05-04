@@ -1,47 +1,20 @@
-body, html { 
-    margin: 0; 
-    padding: 0; 
-    overflow: hidden; 
-    background: #000; 
-    font-family: monospace; 
-}
+body, html { margin: 0; padding: 0; overflow: hidden; background: #000; font-family: sans-serif; }
+#input_video { position: fixed; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+#magic-canvas { position: fixed; top: 0; left: 0; pointer-events: none; mix-blend-mode: screen; }
 
-/* Hacemos que el video ocupe toda la pantalla y funcione como espejo */
-#input_video { 
-    position: fixed; 
-    width: 100%; 
-    height: 100%; 
-    object-fit: cover; 
-    transform: scaleX(-1); 
-}
-
-/* El lienzo transparente encima del video */
-#ascii-canvas { 
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    pointer-events: none; 
-}
-
-/* Diseño de la pantalla de inicio */
 #ui { 
-    position: fixed; 
-    top: 0; left: 0; 
-    width: 100%; height: 100%; 
-    display: flex; 
-    justify-content: center; align-items: center; 
-    background: rgba(0,0,0,0.9); 
-    z-index: 10; 
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+    display: flex; flex-direction: column; justify-content: center; align-items: center; 
+    background: radial-gradient(circle, #001a33 0%, #000 100%); z-index: 10; 
 }
+#ui p { color: #00f2ff; letter-spacing: 2px; margin-top: 20px; animation: pulse 1.5s infinite; }
 
 #start-btn { 
-    padding: 20px 40px; 
-    background: #ff00ff; 
-    color: white;
-    border: none; 
-    font-size: 20px;
-    font-weight: bold; 
-    border-radius: 10px; 
-    cursor: pointer; 
-    box-shadow: 0 0 20px #ff00ff;
+    padding: 20px 50px; background: transparent; color: #00f2ff; 
+    border: 2px solid #00f2ff; border-radius: 50px; font-size: 22px; font-weight: bold; 
+    cursor: pointer; box-shadow: 0 0 20px rgba(0, 242, 255, 0.5); 
+    transition: all 0.3s;
 }
+#start-btn:active { transform: scale(0.9); background: #00f2ff; color: #000; }
+
+@keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
