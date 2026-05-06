@@ -3,17 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Alquimia Digital HCI</title>
+    <title>AR Galaxy Experience</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="ui">
-        <h1>SISTEMA HCI ACTIVADO</h1>
-        <button id="start-btn">INICIAR SECUENCIA</button>
-        <div class="loader"></div>
+        <h1>SISTEMA AR GALÁCTICO</h1>
+        <button id="start-btn">INICIAR PORTAL</button>
     </div>
 
-    <video id="input_video" autoplay playsinline muted style="display:none"></video>
+    <!-- El video es tu fondo real -->
+    <video id="input_video" autoplay playsinline muted></video>
+    <!-- El canvas es donde pintamos las estrellas encima de ti -->
     <canvas id="magic-canvas"></canvas>
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
@@ -21,4 +22,3 @@
     <script type="module" src="main.js"></script>
 </body>
 </html>
-

@@ -3,143 +3,98 @@ const canvasElement = document.getElementById('magic-canvas');
 const canvasCtx = canvasElement.getContext('2d');
 const startBtn = document.getElementById('start-btn');
 
-let particles = [];
+let stars = [];
 
-class Particle {
-    constructor(x, y, color) {
-        this.x = x; this.y = y;
-        this.size = Math.random() * 3 + 1;
-        this.speedX = (Math.random() - 0.5) * 8;
-        this.speedY = (Math.random() - 0.5) * 8;
+class GalaxyStar {
+    constructor(x, y, color, armAngle) {
+        this.originX = x;
+        this.originY = y;
+        this.armAngle = armAngle; // El "brazo" al que pertenece (0, 120 o 240 grados)
+        this.distance = 0;
+        this.angle = 0;
+        this.size = Math.random() * 3 + 2;
         this.color = color;
-        this.life = 1; // 100% de vida
+        this.life = 1.0;
+        this.rotationSpeed = Math.random() * 0.05 + 0.02;
     }
     update() {
-        this.x += this.speedX; this.y += this.speedY;
-        this.life -= 0.02; // Se desvanece
+        this.distance += 3; // Qué tan rápido se expande la galaxia
+        this.angle += this.rotationSpeed; // Qué tan rápido gira
+        
+        // Matemáticas de espiral: Coordenadas Polares -> Cartesianas
+        this.x = this.originX + Math.cos(this.angle + this.armAngle) * this.distance;
+        this.y = this.originY + Math.sin(this.angle + this.armAngle) * this.distance;
+        
+        this.life -= 0.015; // Tiempo que dura la estrella en pantalla
     }
     draw() {
         canvasCtx.globalAlpha = this.life;
         canvasCtx.fillStyle = this.color;
+        // Efecto de resplandor (Glow)
+        canvasCtx.shadowBlur = 15;
+        canvasCtx.shadowColor = this.color;
+        
         canvasCtx.beginPath();
         canvasCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         canvasCtx.fill();
+        canvasCtx.shadowBlur = 0;
     }
 }
 
 function onResults(results) {
     canvasElement.width = window.innerWidth;
     canvasElement.height = window.innerHeight;
-    
-    // Efecto de rastro (motion blur)
-    canvasCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-    canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
+    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
     if (results.multiHandLandmarks) {
         results.multiHandLandmarks.forEach((landmarks, index) => {
             const isLeft = results.multiHandedness[index].label === "Left";
             const color = isLeft ? '#00f2ff' : '#ff00ff';
             
-            // Detectar dedos arriba
-            const up = {
-                index: landmarks[8].y < landmarks[6].y,
-                middle: landmarks[12].y < landmarks[10].y,
-                ring: landmarks[16].y < landmarks[14].y,
-                pinky: landmarks[20].y < landmarks[18].y,
-                thumb: Math.abs(landmarks[4].x - landmarks[2].x) > 0.05
-            };
+            // Centro de la palma
+            const px = (1 - landmarks[9].x) * canvasElement.width;
+            const py = landmarks[9].y * canvasElement.height;
 
-            const upCount = Object.values(up).filter(Boolean).length;
-            const palmX = (1 - landmarks[9].x) * canvasElement.width;
-            const palmY = landmarks[9].y * canvasElement.height;
+            // Detectar si la mano está abierta (más de 0.2 de distancia entre muñeca y dedo)
+            const isOpen = Math.abs(landmarks[8].y - landmarks[0].y) > 0.2;
 
-            // --- LÓGICA DE ANIMACIONES SORPRENDENTES ---
-
-            // GESTO 1: PUÑO (Singularidad)
-            if (upCount === 0) {
-                drawSingularity(palmX, palmY, color);
-            } 
-            // GESTO 2: SEÑAL DE PAZ (Arcos Eléctricos)
-            else if (upCount === 2 && up.index && up.middle) {
-                drawElectricArc(landmarks, color);
-            }
-            // GESTO 3: SPIDERMAN (Supernova)
-            else if (upCount === 2 && up.index && up.pinky) {
-                createSupernova(palmX, palmY, color);
-            }
-            // GESTO 4: PALMA ABIERTA (Flujo Estelar)
-            else {
-                createFlow(landmarks, color);
+            if (isOpen) {
+                // Creamos estrellas en 3 brazos distintos para formar la galaxia
+                for (let arm = 0; arm < 3; arm++) {
+                    const armOffset = (Math.PI * 2 / 3) * arm;
+                    stars.push(new GalaxyStar(px, py, color, armOffset));
+                }
             }
         });
     }
 
-    // Dibujar y limpiar partículas
-    particles.forEach((p, i) => {
-        p.update(); p.draw();
-        if (p.life <= 0) particles.splice(i, 1);
+    // Dibujar y actualizar todas las estrellas
+    stars.forEach((s, i) => {
+        s.update();
+        s.draw();
+        if (s.life <= 0) stars.splice(i, 1);
     });
 }
 
-// --- EFECTOS VISUALES ---
+// Configuración de la IA (MediaPipe)
+const hands = new Hands({
+    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+});
 
-function drawSingularity(x, y, color) {
-    canvasCtx.shadowBlur = 30;
-    canvasCtx.shadowColor = color;
-    canvasCtx.strokeStyle = color;
-    canvasCtx.lineWidth = 2;
-    canvasCtx.beginPath();
-    canvasCtx.arc(x, y, Math.random() * 40, 0, Math.PI * 2);
-    canvasCtx.stroke();
-    canvasCtx.shadowBlur = 0;
-    
-    // Succiona partículas
-    for(let i=0; i<3; i++) particles.push(new Particle(x + (Math.random()-0.5)*200, y + (Math.random()-0.5)*200, color));
-}
-
-function drawElectricArc(lm, color) {
-    const x1 = (1 - lm[8].x) * canvasElement.width;
-    const y1 = lm[8].y * canvasElement.height;
-    const x2 = (1 - lm[12].x) * canvasElement.width;
-    const y2 = lm[12].y * canvasElement.height;
-    
-    canvasCtx.strokeStyle = 'white';
-    canvasCtx.lineWidth = 3;
-    canvasCtx.beginPath();
-    canvasCtx.moveTo(x1, y1);
-    // Rayo zig-zag
-    for(let i=0; i<5; i++) {
-        canvasCtx.lineTo(x1 + (x2-x1)*i/5 + (Math.random()-0.5)*20, y1 + (y2-y1)*i/5 + (Math.random()-0.5)*20);
-    }
-    canvasCtx.lineTo(x2, y2);
-    canvasCtx.stroke();
-    for(let i=0; i<5; i++) particles.push(new Particle(x1, y1, color), new Particle(x2, y2, color));
-}
-
-function createSupernova(x, y, color) {
-    for(let i=0; i<10; i++) {
-        let p = new Particle(x, y, color);
-        p.speedX *= 2; p.speedY *= 2;
-        particles.push(p);
-    }
-}
-
-function createFlow(lm, color) {
-    [8, 12, 16, 20, 4].forEach(pt => {
-        const x = (1 - lm[pt].x) * canvasElement.width;
-        const y = lm[pt].y * canvasElement.height;
-        particles.push(new Particle(x, y, color));
-    });
-}
-
-// --- CONFIGURACIÓN ---
-const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
-hands.setOptions({ maxNumHands: 2, modelComplexity: 0, minDetectionConfidence: 0.7 });
+hands.setOptions({
+    maxNumHands: 2,
+    modelComplexity: 0, // Optimizado para tu Samsung A55
+    minDetectionConfidence: 0.5,
+    minTrackingConfidence: 0.5
+});
 hands.onResults(onResults);
 
 const camera = new Camera(videoElement, {
-    onFrame: async () => { await hands.send({ image: videoElement }); },
-    width: 640, height: 480
+    onFrame: async () => {
+        await hands.send({ image: videoElement });
+    },
+    width: 640,
+    height: 480
 });
 
 startBtn.addEventListener('click', () => {
